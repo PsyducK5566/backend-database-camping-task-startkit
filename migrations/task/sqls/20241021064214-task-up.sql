@@ -72,11 +72,46 @@ LIMIT 3;
     -- 2. 名稱為`14 堂組合包方案`，價格為`2,520` 元，堂數為`14`
     -- 3. 名稱為 `21 堂組合包方案`，價格為`4,800` 元，堂數為`21`
 
+--(name, price, lessons)：指定要插入的欄位分別是 name（名稱）、price（價格）和 lessons（堂數）。
+--VALUES：插入的具體資料
+
+INSERT INTO "CREDIT_PACKAGE" (name, credit_amount, price)
+VALUES
+  ('7 堂組合包方案', 7, 1400.00),
+  ('14 堂組合包方案', 14, 2520.00),
+  ('21 堂組合包方案', 21, 4800.00);
+
 -- 2-2. 新增：在 `CREDIT_PURCHASE` 資料表，新增三筆資料：（請使用 name 欄位做子查詢）
     -- 1. `王小明` 購買 `14 堂組合包方案`
     -- 2. `王小明` 購買 `21 堂組合包方案`
     -- 3. `好野人` 購買 `14 堂組合包方案`
 
+-- 王小明 購買 14 堂組合包方案
+INSERT INTO "CREDIT_PURCHASE" (user_id, credit_package_id, purchased_credits, price_paid) 
+VALUES (
+  (SELECT id FROM "USER" WHERE email = 'wXlTq@hexschooltest.io'), -- 王小明的 email
+  (SELECT id FROM "CREDIT_PACKAGE" WHERE name = '14 堂組合包方案'), -- 14 堂組合包方案的 id
+  (SELECT credit_amount FROM "CREDIT_PACKAGE" WHERE name = '14 堂組合包方案'), -- 堂數
+  (SELECT price FROM "CREDIT_PACKAGE" WHERE name = '14 堂組合包方案') -- 價格
+);
+
+-- 王小明 購買 21 堂組合包方案
+INSERT INTO "CREDIT_PURCHASE" (user_id, credit_package_id, purchased_credits, price_paid) 
+VALUES (
+  (SELECT id FROM "USER" WHERE email = 'wXlTq@hexschooltest.io'), -- 王小明的 email
+  (SELECT id FROM "CREDIT_PACKAGE" WHERE name = '21 堂組合包方案'), -- 21 堂組合包方案的 id
+  (SELECT credit_amount FROM "CREDIT_PACKAGE" WHERE name = '21 堂組合包方案'), -- 堂數
+  (SELECT price FROM "CREDIT_PACKAGE" WHERE name = '21 堂組合包方案') -- 價格
+);
+
+-- 好野人 購買 14 堂組合包方案
+INSERT INTO "CREDIT_PURCHASE" (user_id, credit_package_id, purchased_credits, price_paid) 
+VALUES (
+  (SELECT id FROM "USER" WHERE email = 'richman@hexschooltest.io'), -- 好野人的 email
+  (SELECT id FROM "CREDIT_PACKAGE" WHERE name = '14 堂組合包方案'), -- 14 堂組合包方案的 id
+  (SELECT credit_amount FROM "CREDIT_PACKAGE" WHERE name = '14 堂組合包方案'), -- 堂數
+  (SELECT price FROM "CREDIT_PACKAGE" WHERE name = '14 堂組合包方案') -- 價格
+);
 
 -- ████████  █████   █    ████   
 --   █ █   ██    █  █         ██ 
