@@ -12,9 +12,7 @@
 --     4. 用戶名稱為`好野人`，Email 為`richman@hexschooltest.io`，Role為`USER`
 --     5. 用戶名稱為`Q太郎`，Email 為`starplatinum@hexschooltest.io`，Role為`USER`
 --     6. 用戶名稱為 透明人，Email 為 opacity0@hexschooltest.io，Role 為 USER
-
 --使用 INSERT INTO 語法將資料插入到 "USER" 表中。
-
 INSERT INTO
     "USER" (name, email, role)
 VALUES
@@ -25,53 +23,54 @@ VALUES
     ('Q太郎', 'starplatinum@hexschooltest.io', 'USER'),
     ('透明人', 'opcatiy0@hexschooltest.io', 'USER');
 
--- 1-2 修改：用 Email 找到 李燕容、肌肉棒子、Q太郎，如果他的 Role 為 USER 將他的 Role 改為 COACH
+-- -- 驗證插入結果 --
+-- SELECT * FROM "USER";
 
+-- 
+-- 1-2 修改：用 Email 找到 李燕容、肌肉棒子、Q太郎，如果他的 Role 為 USER 將他的 Role 改為 COACH
 --UPDATE "USER"：更新 "USER" 表中的資料。
 --WHERE email IN (...)：篩選
 --AND role = 'USER'：限制條件
+--使用 LOWER() 函數將 email 欄位轉為小寫後再比較，避免大小寫問題。
+UPDATE "USER"
+SET role = 'COACH'
+WHERE LOWER(email) IN
+    ('lee2000@hexschooltest.io', 'muscle@hexschooltest.io', 'starplatinum@hexschooltest.io');
 
-UPDATE
-    "USER"
-SET
-    role = 'COACH'
-WHERE
-    email IN (
-        'lee2000@hexschooltest.io',
-        'muscle@hexschooltest.io',
-        'starplatinum@hexschooltest.io'
-    )
-    AND role = 'USER';
+-- 檢查
+-- SELECT name, email, role FROM "USER" 
+-- WHERE email IN 
+-- ('lee2000@hexschooltest.io', 'muscle@hexschooltest.io', 'starplatinum@hexschooltest.io');
+
 
 -- 1-3 刪除：刪除USER 資料表中，用 Email 找到透明人，並刪除該筆資料
-
 --DELETE FROM "USER"：從 "USER" 資料表中刪除資料。
-
-DELETE FROM
-    "USER"
+DELETE FROM "USER"
 WHERE
     email = 'opcatiy0@hexschooltest.io';
 
 -- 1-4 查詢：取得USER 資料表目前所有用戶數量（提示：使用count函式）
-
 --SELECT COUNT(*)：使用 COUNT 函數來計算 "USER" 表中的總記錄數，也就是用戶的數量。
---AS total_users：為計算結果取別名 total_users
 
-SELECT
-    COUNT(*) AS total_users
-FROM
-    "USER";
+SELECT 
+    role, 
+    COUNT(*) AS "用戶數量"
+FROM "USER"
+GROUP BY role;
 
 -- 1-5 查詢：取得 USER 資料表所有用戶資料，並列出前 3 筆（提示：使用limit語法）
-
 --LIMIT 3：限制查詢結果只返回前 3 筆資料。
 
 SELECT
-    *
-FROM
-    "USER"
-LIMIT
-    3;
+  id AS "用戶編號"
+  ,name AS "用戶名稱"
+  ,email AS "用戶信箱"
+  ,role AS "用戶角色"
+  ,created_at AS "建立資料時間"
+  ,updated_at AS "更新資料時間"
+FROM "USER"
+ORDER BY created_at DESC
+LIMIT 3;
 
 --  ████████  █████   █    ████  
 --    █ █   ██    █  █         █ 
@@ -84,10 +83,8 @@ LIMIT
 -- 1. 名稱為 `7 堂組合包方案`，價格為`1,400` 元，堂數為`7`
 -- 2. 名稱為`14 堂組合包方案`，價格為`2,520` 元，堂數為`14`
 -- 3. 名稱為 `21 堂組合包方案`，價格為`4,800` 元，堂數為`21`
-
 --(name, price, lessons)：指定要插入的欄位分別是 name（名稱）、price（價格）和 lessons（堂數）。
 --VALUES：插入的具體資料
-
 INSERT INTO
     "CREDIT_PACKAGE" (name, credit_amount, price)
 VALUES
@@ -95,151 +92,41 @@ VALUES
     ('14 堂組合包方案', 14, 2520.00),
     ('21 堂組合包方案', 21, 4800.00);
 
+-- -- 驗證插入結果--
+-- SELECT * 
+-- FROM "CREDIT_PACKAGE"
+-- WHERE name IN ('7 堂組合包方案', '14 堂組合包方案', '21 堂組合包方案');
+
+
 -- 2-2. 新增：在 `CREDIT_PURCHASE` 資料表，新增三筆資料：（請使用 name 欄位做子查詢）
 -- 1. `王小明` 購買 `14 堂組合包方案`
 -- 2. `王小明` 購買 `21 堂組合包方案`
 -- 3. `好野人` 購買 `14 堂組合包方案`
+-- 將 USER 表和 CREDIT_PACKAGE 表進行交叉連接，生成兩表的所有可能組合。
 
 -- 王小明 購買 14 堂組合包方案
-INSERT INTO
-    "CREDIT_PURCHASE" (
-        user_id,
-        credit_package_id,
-        purchased_credits,
-        price_paid
-    )
-VALUES
-    (
-        (
-            SELECT
-                id
-            FROM
-                "USER"
-            WHERE
-                email = 'wXlTq@hexschooltest.io'
-        ),
-        -- 王小明的 email --
-        (
-            SELECT
-                id
-            FROM
-                "CREDIT_PACKAGE"
-            WHERE
-                name = '14 堂組合包方案'
-        ),
-        -- 14 堂組合包方案的 id --
-        (
-            SELECT
-                credit_amount
-            FROM
-                "CREDIT_PACKAGE"
-            WHERE
-                name = '14 堂組合包方案'
-        ),
-        -- 堂數 --
-        (
-            SELECT
-                price
-            FROM
-                "CREDIT_PACKAGE"
-            WHERE
-                name = '14 堂組合包方案'
-        ) -- 價格 --
-    );
+--- 新增 王小明 購買 14、21 堂數組合包
+INSERT INTO "CREDIT_PURCHASE" (user_id,credit_package_id,purchased_credits,price_paid)
+SELECT u.id
+      ,cp.id
+      ,cp.credit_amount
+      ,cp.price
+FROM "USER" AS "u"
+CROSS JOIN "CREDIT_PACKAGE" AS "cp"
+WHERE u.email = 'wXlTq@hexschooltest.io'
+AND cp.name IN ('14 堂組合包方案','21 堂組合包方案');
 
--- 王小明 購買 21 堂組合包方案
-INSERT INTO
-    "CREDIT_PURCHASE" (
-        user_id,
-        credit_package_id,
-        purchased_credits,
-        price_paid
-    )
-VALUES
-    (
-        (
-            SELECT
-                id
-            FROM
-                "USER"
-            WHERE
-                email = 'wXlTq@hexschooltest.io'
-        ),
-        -- 王小明的 email --
-        (
-            SELECT
-                id
-            FROM
-                "CREDIT_PACKAGE"
-            WHERE
-                name = '21 堂組合包方案'
-        ),
-        -- 21 堂組合包方案的 id --
-        (
-            SELECT
-                credit_amount
-            FROM
-                "CREDIT_PACKAGE"
-            WHERE
-                name = '21 堂組合包方案'
-        ),
-        -- 堂數 --
-        (
-            SELECT
-                price
-            FROM
-                "CREDIT_PACKAGE"
-            WHERE
-                name = '21 堂組合包方案'
-        ) -- 價格 --
-    );
+--- 新增 好野人 購買 14 堂數組合包
+INSERT INTO "CREDIT_PURCHASE" (user_id,credit_package_id,purchased_credits,price_paid)
+SELECT u.id
+      ,cp.id
+      ,cp.credit_amount
+      ,cp.price
+FROM "USER" AS "u"
+CROSS JOIN "CREDIT_PACKAGE" AS "cp"
+WHERE u.email = 'richman@hexschooltest.io'
+AND cp.name IN ('14 堂組合包方案');
 
--- 好野人 購買 14 堂組合包方案
-INSERT INTO
-    "CREDIT_PURCHASE" (
-        user_id,
-        credit_package_id,
-        purchased_credits,
-        price_paid
-    )
-VALUES
-    (
-        (
-            SELECT
-                id
-            FROM
-                "USER"
-            WHERE
-                email = 'richman@hexschooltest.io'
-        ),
-        -- 好野人的 email --
-        (
-            SELECT
-                id
-            FROM
-                "CREDIT_PACKAGE"
-            WHERE
-                name = '14 堂組合包方案'
-        ),
-        -- 14 堂組合包方案的 id --
-        (
-            SELECT
-                credit_amount
-            FROM
-                "CREDIT_PACKAGE"
-            WHERE
-                name = '14 堂組合包方案'
-        ),
-        -- 堂數 --
-        (
-            SELECT
-                price
-            FROM
-                "CREDIT_PACKAGE"
-            WHERE
-                name = '14 堂組合包方案'
-        ) -- 價格 --
-    );
 
 -- ████████  █████   █    ████   
 --   █ █   ██    █  █         ██ 
@@ -252,126 +139,92 @@ VALUES
 -- 1. 將用戶`李燕容`新增為教練，並且年資設定為2年（提示：使用`李燕容`的email ，取得 `李燕容` 的 `id` ）
 -- 2. 將用戶`肌肉棒子`新增為教練，並且年資設定為2年
 -- 3. 將用戶`Q太郎`新增為教練，並且年資設定為2年
+-- 不希望重複插入相同的教練記錄，在執行前檢查 COACH 表中是否已存在相同的記錄
+-- SELECT * 
+-- FROM "COACH"
+-- WHERE user_id IN (
+--     SELECT id 
+--     FROM "USER"
+--     WHERE email IN ('lee2000@hexschooltest.io', 'muscle@hexschooltest.io', 'starplatINum@hexschooltest.io')
+-- );
 
 --INSERT INTO "COACH"：指定要插入資料的資料表是 COACH，並且插入的欄位是 user_id (教練對應的使用者 ID) experience_years (教練的年資)。
 --SELECT 子查詢：從 USER 資料表中選擇符合條件的資料，並提取 id (對應到 user_id 欄位) ，2 AS "experience_years (將年資設為 2 年，並對應到 experience_years 欄位)。
 --使用 WHERE "email" IN (...) 條件，篩選出 email 使用人
-
-INSERT INTO
-    "COACH" (user_id, experience_years)
-SELECT
-    id,
-    2 AS "experience_years"
-FROM
-    "USER"
-WHERE
-    "email" IN (
-        'lee2000@hexschooltest.io',
-        'muscle@hexschooltest.io',
-        'starplatinum@hexschooltest.io'
-    );
+INSERT INTO "COACH" (user_id,experience_years)
+SELECT id,2
+FROM "USER"
+WHERE email IN ('lee2000@hexschooltest.io','muscle@hexschooltest.io','starplatINum@hexschooltest.io');
 
 -- 3-2. 新增：承1，為三名教練新增專長資料至 `COACH_LINK_SKILL` ，資料需求如下：
 -- 1. 所有教練都有 `重訓` 專長
+-- CROSS JOIN：將 COACH 表和 SKILL 表進行交叉連接，生成所有可能的教練與技能組合。
+-- CROSS JOIN：將 COACH 表與 USER 表連接，通過 c.user_id = u.id 獲取教練對應的用戶信息。
+-- 限制篩選條件，僅選取技能名稱為 「重訓」 的技能記錄。
+INSERT INTO "COACH_LINK_SKILL" (coach_id,skill_id)
+SELECT 
+    c.id AS "coach_id"
+    ,s.id AS "skill_id"
+FROM "COACH" AS "c"
+CROSS JOIN "SKILL" AS "s"
+INNER JOIN "USER" AS "u" on c.user_id = u.id
+WHERE s.name = '重訓';
+
 -- 2. 教練`肌肉棒子` 需要有 `瑜伽` 專長
+INSERT INTO "COACH_LINK_SKILL" (coach_id,skill_id)
+SELECT 
+    c.id AS "coach_id"
+    ,s.id AS "skill_id"
+FROM "COACH" AS "c"
+CROSS JOIN "SKILL" AS "s"
+INNER JOIN "USER" AS "u" on c.user_id = u.id
+WHERE s.name = '瑜伽'
+		AND u.email = 'muscle@hexschooltest.io';
+
 -- 3. 教練`Q太郎` 需要有 `有氧運動` 與 `復健訓練` 專長
+INSERT INTO "COACH_LINK_SKILL" (coach_id,skill_id)
+SELECT 
+    c.id AS "coach_id"
+   ,s.id AS "skill_id"
+FROM "COACH" AS "c"
+CROSS JOIN "SKILL" AS "s"
+INNER JOIN "USER" AS "u" on c.user_id = u.id
+WHERE s.name IN ('有氧運動','復健訓練')
+AND u.email = 'starplatINum@hexschooltest.io';
 
---從 COACH 資料表中找到教練的 ID（coach_id）。
---從 SKILL 資料表中找到技能的 ID（skill_id）。
---使用 email 來篩選特定教練，確保插入的技能對應正確的教練。
---通過 user_id 連接，找到教練對應的使用者。
---通過技能名稱（name）連接，找到技能的 ID。
---用 email 篩選特定教練，確保專長正確新增到指定教練。
---用技能名稱篩選特定技能，確保插入的技能正確。
---新增所有教練的「重訓」專長
-
-INSERT INTO
-    "COACH_LINK_SKILL" (coach_id, skill_id)
-SELECT
-    c.id AS coach_id,
-    s.id AS skill_id
-FROM
-    "COACH" c
-    JOIN "USER" u ON c.user_id = u.id
-    JOIN "SKILL" s ON s.name = '重訓'
-WHERE
-    u.email IN (
-        'lee2000@hexschooltest.io',
-        -- 李燕容
-        'muscle@hexschooltest.io',
-        -- 肌肉棒子
-        'starplatinum@hexschooltest.io' -- Q太郎
-    );
-
---新增「肌肉棒子」的「瑜伽」專長
-INSERT INTO
-    "COACH_LINK_SKILL" (coach_id, skill_id)
-SELECT
-    c.id AS coach_id,
-    s.id AS skill_id
-FROM
-    "COACH" c
-    JOIN "USER" u ON c.user_id = u.id
-    JOIN "SKILL" s ON s.name = '瑜伽'
-WHERE
-    u.email = 'muscle@hexschooltest.io';
--- 肌肉棒子的 email --
-
---新增「Q太郎」的「有氧運動」與「復健訓練」專長
-INSERT INTO
-    "COACH_LINK_SKILL" (coach_id, skill_id)
-SELECT
-    c.id AS coach_id,
-    s.id AS skill_id
-FROM
-    "COACH" c
-    JOIN "USER" u ON c.user_id = u.id
-    JOIN "SKILL" s ON s.name IN ('有氧運動', '復健訓練')
-WHERE
-    u.email = 'starplatinum@hexschooltest.io';-- Q太郎的 email--
 
 -- 3-3 修改：更新教練的經驗年數，資料需求如下：
 -- 1. 教練`肌肉棒子` 的經驗年數為3年
+--UPDATE "COACH"：指定要更新的表是 COACH 表。
+-- 通過 FROM "USER" AS "u"，可以使用 USER 表來篩選出符合條件的教練。
+-- COACH 表中的 user_id 與 USER 表中的 id 進行匹配，從而確保更新的是正確的教練記錄。
+-- user_id = u.id：確保 COACH 表中的 user_id 與 USER 表中的 id 關聯起來。
+-- SET 的作用：將符合條件的教練的 experience_years 欄位更新為 3。
+UPDATE "COACH" 
+SET experience_years = 3
+FROM "USER" AS "u" 
+WHERE user_id = u.id
+AND u.email = 'muscle@hexschooltest.io';
+
+-- 驗證更新是否成功：
+-- SELECT c.id, c.user_id, c.experience_years, u.email
+-- FROM "COACH" AS c
+-- INNER JOIN "USER" AS u ON c.user_id = u.id
+-- WHERE u.email = 'muscle@hexschooltest.io';
+
 -- 2. 教練`Q太郎` 的經驗年數為5年
-
--- 更新教練「肌肉棒子」的經驗年數為 3 年
-UPDATE
-    "COACH"
-SET
-    "experience_years" = 3
-WHERE
-    "user_id" = (
-        SELECT
-            id
-        FROM
-            "USER"
-        WHERE
-            "email" = 'muscle@hexschooltest.io'
-    );
-
--- 更新教練「Q太郎」的經驗年數為 5 年
-UPDATE
-    "COACH"
-SET
-    "experience_years" = 5
-WHERE
-    "user_id" = (
-        SELECT
-            id
-        FROM
-            "USER"
-        WHERE
-            "email" = 'starplatinum@hexschooltest.io'
-    );
+UPDATE "COACH" 
+SET experience_years = 5
+FROM "USER" AS "u" 
+WHERE user_id = u.id
+AND u.email = 'starplatINum@hexschooltest.io';
 
 -- 3-4 刪除：新增一個專長 空中瑜伽 至 SKILL 資料表，之後刪除此專長。
-
 --新增
 INSERT INTO
     "SKILL" (name)
 VALUES
     ('空中瑜伽');
-
 --刪除
 DELETE FROM
     "SKILL"
@@ -393,44 +246,39 @@ WHERE
 -- 5. 授課結束時間`end_at`設定為2024-11-25 16:00:00
 -- 6. 最大授課人數`max_participants` 設定為10
 -- 7. 授課連結設定`meeting_url`為 https://test-meeting.test.io
+-- INNER JOIN 的作用：
+-- 連接多個表，確保插入的課程數據是基於正確的教練和技能。
+-- USER 表中的 id 必須與 COACH 表中的 user_id 對應。
+-- COACH 表中的 id 必須與 COACH_LINK_SKILL 表中的 coach_id 對應。
+-- COACH_LINK_SKILL 表中的 skill_id 必須與 SKILL 表中的 id 對應，且技能名稱為「重訓」。
+-- WHERE 條件的作用：
+-- 限制條件為 USER 表中 email 為 'lee2000@hexschooltest.io' 的教練，確保新增的課程屬於該教練。
+INSERT INTO "COURSE" (user_id,skill_id,name,start_at,end_at,max_participants,meetINg_url)
+SELECT 
+	u.id
+	,s.id
+	,'重訓基礎課' AS "name"
+	,'2024-11-25 14:00:00' AS "start_at"
+	,'2024-11-25 16:00:00' AS "end_at"
+	,'10' AS "max_participants"
+	,'https://test-meetINg.test.io' AS "meetINg_url"
+FROM "USER" AS "u"
+INNER JOIN "COACH" AS "c"
+ON u.id = c.user_id
+INNER JOIN "COACH_LINK_SKILL" AS "clk"
+ON c.id = clk.coach_id
+INNER JOIN "SKILL" AS "s"
+ON s.id = clk.skill_id AND s.name = '重訓'
+WHERE u.email = 'lee2000@hexschooltest.io';
 
---從 USER 資料表中查找 email 為 'lee2000@hexschooltest.io' 的用戶 ID。
---從 SKILL 資料表中查找名稱為 '重訓' 的技能 ID。
+-- 查詢語句來驗證插入是否成功：
+-- SELECT * 
+-- FROM "COURSE"
+-- WHERE user_id = (
+--     SELECT id FROM "USER" WHERE email = 'lee2000@hexschooltest.io'
+-- );
 
-INSERT INTO
-    "COURSE" (
-        user_id,
-        skill_id,
-        name,
-        start_at,
-        end_at,
-        max_participants,
-        meeting_url
-    )
-VALUES
-    (
-        (
-            SELECT
-                id
-            FROM
-                "USER"
-            WHERE
-                "email" = 'lee2000@hexschooltest.io'
-        ),
-        (
-            SELECT
-                id
-            FROM
-                "SKILL"
-            WHERE
-                "name" = '重訓'
-        ),
-        '重訓基礎課',
-        '2024-11-25 14:00:00',
-        '2024-11-25 16:00:00',
-        10,
-        'https://test-meeting.test.io'
-    );
+
 
 -- ████████  █████   █    █████ 
 --   █ █   ██    █  █     █     
@@ -444,22 +292,218 @@ VALUES
 -- 1. 預約人設為`王小明`
 -- 2. 預約時間`booking_at` 設為2024-11-24 16:00:00
 -- 3. 狀態`status` 設定為即將授課
+--從 USER 資料表中查找對應 email 的用戶 ID
+--從 COURSE 資料表中查找 user_id 對應的課程 ID。
+-- 第一筆記錄
+INSERT INTO
+    "COURSE_BOOKING" (user_id, course_id, status, booking_at)
+VALUES
+    (
+        (
+            SELECT
+                id
+            FROM
+                "USER"
+            WHERE
+                "email" = 'wXlTq@hexschooltest.io'
+        ),
+        (
+            SELECT
+                id
+            FROM
+                "COURSE"
+            WHERE
+                user_id = (
+                    SELECT
+                        id
+                    FROM
+                        "USER"
+                    WHERE
+                        "email" = 'lee2000@hexschooltest.io'
+                )
+        ),
+        '即將授課',
+        '2024-11-24 16:00:00'
+    );
+
 -- 2. 新增： `好野人` 預約 `李燕容` 的課程
 -- 1. 預約人設為 `好野人`
 -- 2. 預約時間`booking_at` 設為2024-11-24 16:00:00
 -- 3. 狀態`status` 設定為即將授課
+-- 第二筆記錄
+INSERT INTO
+    "COURSE_BOOKING" (user_id, course_id, status, booking_at)
+VALUES
+    (
+        (
+            SELECT
+                id
+            FROM
+                "USER"
+            WHERE
+                "email" = 'richman@hexschooltest.io'
+        ),
+        (
+            SELECT
+                id
+            FROM
+                "COURSE"
+            WHERE
+                user_id = (
+                    SELECT
+                        id
+                    FROM
+                        "USER"
+                    WHERE
+                        "email" = 'lee2000@hexschooltest.io'
+                )
+        ),
+        '即將授課',
+        '2024-11-24 16:00:00'
+    );
+
 -- 5-2. 修改：`王小明`取消預約 `李燕容` 的課程，請在`COURSE_BOOKING`更新該筆預約資料：
 -- 1. 取消預約時間`cancelled_at` 設為2024-11-24 17:00:00
 -- 2. 狀態`status` 設定為課程已取消
+-- 取得 user_id 和 course_id
+WITH user_and_course AS (
+    SELECT
+        (
+            SELECT
+                id
+            FROM
+                "USER"
+            WHERE
+                "email" = 'wXlTq@hexschooltest.io'
+        ) AS user_id,
+        (
+            SELECT
+                id
+            FROM
+                "COURSE"
+            WHERE
+                user_id = (
+                    SELECT
+                        id
+                    FROM
+                        "USER"
+                    WHERE
+                        "email" = 'lee2000@hexschooltest.io'
+                )
+        ) AS course_id
+) -- 更新符合條件的記錄
+UPDATE
+    "COURSE_BOOKING"
+SET
+    "status" = '課程已取消',
+    "cancelled_at" = '2024-11-24 17:00:00'
+WHERE
+    "user_id" = (
+        SELECT
+            user_id
+        FROM
+            user_and_course
+    )
+    AND "course_id" = (
+        SELECT
+            course_id
+        FROM
+            user_and_course
+    );
+
 -- 5-3. 新增：`王小明`再次預約 `李燕容`   的課程，請在`COURSE_BOOKING`新增一筆資料：
 -- 1. 預約人設為`王小明`
 -- 2. 預約時間`booking_at` 設為2024-11-24 17:10:25
 -- 3. 狀態`status` 設定為即將授課
+-- 取得 user_id 和 course_id
+WITH user_and_course AS (
+    SELECT
+        (
+            SELECT
+                id
+            FROM
+                "USER"
+            WHERE
+                "email" = 'wXlTq@hexschooltest.io'
+        ) AS user_id,
+        (
+            SELECT
+                id
+            FROM
+                "COURSE"
+            WHERE
+                user_id = (
+                    SELECT
+                        id
+                    FROM
+                        "USER"
+                    WHERE
+                        "email" = 'lee2000@hexschooltest.io'
+                )
+        ) AS course_id
+) -- 插入記錄
+INSERT INTO
+    "COURSE_BOOKING" (user_id, course_id, status, booking_at)
+SELECT
+    user_id,
+    course_id,
+    '即將授課',
+    '2024-11-24 17:10:25'
+FROM
+    user_and_course;
+
 -- 5-4. 查詢：取得王小明所有的預約紀錄，包含取消預約的紀錄
+
+
 -- 5-5. 修改：`王小明` 現在已經加入直播室了，請在`COURSE_BOOKING`更新該筆預約資料（請注意，不要更新到已經取消的紀錄）：
 -- 1. 請在該筆預約記錄他的加入直播室時間 `join_at` 設為2024-11-25 14:01:59
 -- 2. 狀態`status` 設定為上課中
+-- 查詢符合條件的記錄
+SELECT
+    *
+FROM
+    "COURSE_BOOKING"
+WHERE
+    "user_id" = (
+        SELECT
+            id
+        FROM
+            "USER"
+        WHERE
+            "email" = 'wXlTq@hexschooltest.io'
+    )
+    AND status = '即將授課';
+
+-- 更新後檢查結果
+SELECT
+    *
+FROM
+    "COURSE_BOOKING"
+WHERE
+    "user_id" = (
+        SELECT
+            id
+        FROM
+            "USER"
+        WHERE
+            "email" = 'wXlTq@hexschooltest.io'
+    )
+    AND status = '上課中';
+
 -- 5-6. 查詢：計算用戶王小明的購買堂數，顯示須包含以下欄位： user_id , total。 (需使用到 SUM 函式與 Group By)
+SELECT
+    u.id AS user_id,
+    u.email,
+    SUM(cp.purchased_credits) AS total
+FROM
+    "USER" u
+    JOIN "CREDIT_PURCHASE" cp ON u.id = cp.user_id
+WHERE
+    u.email = 'wXlTq@hexschooltest.io'
+GROUP BY
+    u.id,
+    u.email;
+
 -- 5-7. 查詢：計算用戶王小明的已使用堂數，顯示須包含以下欄位： user_id , total。 (需使用到 Count 函式與 Group By)
 -- 5-8. [挑戰題] 查詢：請在一次查詢中，計算用戶王小明的剩餘可用堂數，顯示須包含以下欄位： user_id , remaining_credit
 -- 提示：
