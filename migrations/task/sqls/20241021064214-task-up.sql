@@ -292,225 +292,197 @@ WHERE u.email = 'lee2000@hexschooltest.io';
 -- 1. 預約人設為`王小明`
 -- 2. 預約時間`booking_at` 設為2024-11-24 16:00:00
 -- 3. 狀態`status` 設定為即將授課
---從 USER 資料表中查找對應 email 的用戶 ID
---從 COURSE 資料表中查找 user_id 對應的課程 ID。
+-- 子查詢用於從 COURSE 表中提取課程的 ID，條件是該課程是由 email 為 'lee2000@hexschooltest.io' 的教練開設的。
+-- ```sql
+-- SELECT c.id
+-- FROM "COURSE" AS "c" 
+-- INNER JOIN "USER" AS "u" 
+-- ON c.user_id = u.id AND u.email = 'lee2000@hexschooltest.io'
+-- ```
+-- 通過 INNER JOIN 將 COURSE 表與 USER 表連接，找到由 'lee2000@hexschooltest.io' 開設的課程。
+-- 外部查詢用於從 USER 表中提取 email 為 'wXlTq@hexschooltest.io' 的用戶 ID，並將其與內部子查詢的結果一起插入到 COURSE_BOOKING 表中。
 -- 第一筆記錄
-INSERT INTO
-    "COURSE_BOOKING" (user_id, course_id, status, booking_at)
-VALUES
-    (
-        (
-            SELECT
-                id
-            FROM
-                "USER"
-            WHERE
-                "email" = 'wXlTq@hexschooltest.io'
-        ),
-        (
-            SELECT
-                id
-            FROM
-                "COURSE"
-            WHERE
-                user_id = (
-                    SELECT
-                        id
-                    FROM
-                        "USER"
-                    WHERE
-                        "email" = 'lee2000@hexschooltest.io'
-                )
-        ),
-        '即將授課',
-        '2024-11-24 16:00:00'
-    );
+INSERT INTO "COURSE_BOOKING" (user_id,course_id,booking_at,status)
+SELECT 
+	u.id
+	,(
+		SELECT c.id
+		FROM "COURSE" AS "c" 
+    INNER JOIN "USER" AS "u" 
+	 	ON c.user_id = u.id AND u.email = 'lee2000@hexschooltest.io'
+	 )
+	,'2024-11-24 16:00:00'
+	,'即將授課'
+FROM "USER" AS "u"
+WHERE u.email = 'wXlTq@hexschooltest.io';
 
 -- 2. 新增： `好野人` 預約 `李燕容` 的課程
 -- 1. 預約人設為 `好野人`
 -- 2. 預約時間`booking_at` 設為2024-11-24 16:00:00
 -- 3. 狀態`status` 設定為即將授課
 -- 第二筆記錄
-INSERT INTO
-    "COURSE_BOOKING" (user_id, course_id, status, booking_at)
-VALUES
-    (
-        (
-            SELECT
-                id
-            FROM
-                "USER"
-            WHERE
-                "email" = 'richman@hexschooltest.io'
-        ),
-        (
-            SELECT
-                id
-            FROM
-                "COURSE"
-            WHERE
-                user_id = (
-                    SELECT
-                        id
-                    FROM
-                        "USER"
-                    WHERE
-                        "email" = 'lee2000@hexschooltest.io'
-                )
-        ),
-        '即將授課',
-        '2024-11-24 16:00:00'
-    );
+INSERT INTO "COURSE_BOOKING" (user_id, course_id, booking_at, status)
+SELECT 
+	u.id
+	,(
+		SELECT c.id
+		FROM "COURSE" AS "c" 
+		INNER JOIN "USER" AS "u" 
+		ON c.user_id = u.id AND u.email = 'lee2000@hexschooltest.io'
+	 )
+	,'2024-11-24 16:00:00'
+	,'即將授課'
+FROM "USER" AS "u"
+WHERE u.email = 'richman@hexschooltest.io';
 
 -- 5-2. 修改：`王小明`取消預約 `李燕容` 的課程，請在`COURSE_BOOKING`更新該筆預約資料：
 -- 1. 取消預約時間`cancelled_at` 設為2024-11-24 17:00:00
 -- 2. 狀態`status` 設定為課程已取消
--- 取得 user_id 和 course_id
-WITH user_and_course AS (
-    SELECT
-        (
-            SELECT
-                id
-            FROM
-                "USER"
-            WHERE
-                "email" = 'wXlTq@hexschooltest.io'
-        ) AS user_id,
-        (
-            SELECT
-                id
-            FROM
-                "COURSE"
-            WHERE
-                user_id = (
-                    SELECT
-                        id
-                    FROM
-                        "USER"
-                    WHERE
-                        "email" = 'lee2000@hexschooltest.io'
-                )
-        ) AS course_id
-) -- 更新符合條件的記錄
-UPDATE
-    "COURSE_BOOKING"
-SET
-    "status" = '課程已取消',
-    "cancelled_at" = '2024-11-24 17:00:00'
-WHERE
-    "user_id" = (
-        SELECT
-            user_id
-        FROM
-            user_and_course
-    )
-    AND "course_id" = (
-        SELECT
-            course_id
-        FROM
-            user_and_course
-    );
+-- 關鍵條件：u.id = "COURSE_BOOKING".user_id
+-- 確保 USER 表中的 id 與 COURSE_BOOKING 表中的 user_id 對應。
+UPDATE "COURSE_BOOKING" 
+SET cancelled_at = '2024-11-24 17:00:00'
+	,status = '課程已取消'
+FROM "USER" AS "u"
+WHERE u.id = "COURSE_BOOKING".user_id AND u.email = 'wXlTq@hexschooltest.io';
 
 -- 5-3. 新增：`王小明`再次預約 `李燕容`   的課程，請在`COURSE_BOOKING`新增一筆資料：
 -- 1. 預約人設為`王小明`
 -- 2. 預約時間`booking_at` 設為2024-11-24 17:10:25
 -- 3. 狀態`status` 設定為即將授課
--- 取得 user_id 和 course_id
-WITH user_and_course AS (
-    SELECT
-        (
-            SELECT
-                id
-            FROM
-                "USER"
-            WHERE
-                "email" = 'wXlTq@hexschooltest.io'
-        ) AS user_id,
-        (
-            SELECT
-                id
-            FROM
-                "COURSE"
-            WHERE
-                user_id = (
-                    SELECT
-                        id
-                    FROM
-                        "USER"
-                    WHERE
-                        "email" = 'lee2000@hexschooltest.io'
-                )
-        ) AS course_id
-) -- 插入記錄
-INSERT INTO
-    "COURSE_BOOKING" (user_id, course_id, status, booking_at)
-SELECT
-    user_id,
-    course_id,
-    '即將授課',
-    '2024-11-24 17:10:25'
-FROM
-    user_and_course;
+
+INSERT INTO "COURSE_BOOKING" (user_id,course_id,booking_at,status)
+SELECT 
+	u.id
+	,(
+		SELECT c.id
+		FROM "COURSE" AS "c" 
+		INNER JOIN "USER" AS "u" 
+		ON c.user_id = u.id AND u.email = 'lee2000@hexschooltest.io'
+	 )
+	,'2024-11-24 17:10:25'
+	,'即將授課'
+FROM "USER" AS "u"
+WHERE u.email = 'wXlTq@hexschooltest.io';
 
 -- 5-4. 查詢：取得王小明所有的預約紀錄，包含取消預約的紀錄
-
+-- 使用 TO_CHAR 函數將日期（如 booking_at、join_at 等）格式化為更直觀的 YYYY-MM-DD HH24:MI:SS 格式，使查詢結果更易於閱讀。
+-- 使用 COALESCE 函數處理可能為 NULL 的欄位（如 join_at、leave_at、cancelled_at 和 cancellation_reason），顯示更友好的替代內容。
+SELECT 
+    cb.id AS "預約課程編號",
+    u.name AS "預約會員",
+    c.name AS "預約課名",
+    TO_CHAR(cb.booking_at, 'YYYY-MM-DD HH24:MI:SS') AS "預約時間", -- 格式化日期
+    cb.status AS "授課狀態",
+    COALESCE(TO_CHAR(cb.join_at, 'YYYY-MM-DD HH24:MI:SS'), '尚未授課') AS "授課時間", -- 處理 NULL 值
+    COALESCE(TO_CHAR(cb.leave_at, 'YYYY-MM-DD HH24:MI:SS'), '尚未離開') AS "離開時間", -- 處理 NULL 值
+    COALESCE(TO_CHAR(cb.cancelled_at, 'YYYY-MM-DD HH24:MI:SS'), '未取消') AS "取消時間", -- 處理 NULL 值
+    COALESCE(cb.cancellation_reason, '無') AS "取消原因", -- 處理 NULL 值
+    TO_CHAR(cb.created_at, 'YYYY-MM-DD HH24:MI:SS') AS "建立時間" -- 格式化日期
+FROM 
+    "COURSE_BOOKING" AS cb
+INNER JOIN 
+    "USER" AS u ON cb.user_id = u.id
+INNER JOIN 
+    "COURSE" AS c ON c.id = cb.course_id
+WHERE 
+    u.email = 'wXlTq@hexschooltest.io'
+ORDER BY 
+    cb.booking_at DESC;
 
 -- 5-5. 修改：`王小明` 現在已經加入直播室了，請在`COURSE_BOOKING`更新該筆預約資料（請注意，不要更新到已經取消的紀錄）：
 -- 1. 請在該筆預約記錄他的加入直播室時間 `join_at` 設為2024-11-25 14:01:59
 -- 2. 狀態`status` 設定為上課中
--- 查詢符合條件的記錄
-SELECT
-    *
-FROM
-    "COURSE_BOOKING"
-WHERE
-    "user_id" = (
-        SELECT
-            id
-        FROM
-            "USER"
-        WHERE
-            "email" = 'wXlTq@hexschooltest.io'
-    )
-    AND status = '即將授課';
 
--- 更新後檢查結果
-SELECT
-    *
-FROM
-    "COURSE_BOOKING"
-WHERE
-    "user_id" = (
-        SELECT
-            id
-        FROM
-            "USER"
-        WHERE
-            "email" = 'wXlTq@hexschooltest.io'
-    )
-    AND status = '上課中';
+UPDATE "COURSE_BOOKING" 
+SET join_at = '2024-11-25 14:01:59'
+	,status = '上課中'
+FROM "USER" AS "u"
+WHERE u.id = "COURSE_BOOKING".user_id 
+	AND u.email = 'wXlTq@hexschooltest.io'
+	AND booking_at = (
+				SELECT MAX(booking_at) 
+				FROM "COURSE_BOOKING" 
+				WHERE "COURSE_BOOKING".user_id = u.id
+			  );
 
 -- 5-6. 查詢：計算用戶王小明的購買堂數，顯示須包含以下欄位： user_id , total。 (需使用到 SUM 函式與 Group By)
+--LEFT JOIN，即使該用戶沒有購買記錄，仍然會返回該用戶的基本信息，且購買總額顯示為 0。
+-- 使用 COALESCE 函數將 SUM 的結果（可能為 NULL）轉換為 0，避免結果中出現空值。
+
 SELECT
     u.id AS user_id,
     u.email,
-    SUM(cp.purchased_credits) AS total
+    COALESCE(SUM(cp.purchased_credits), 0) AS total -- 處理無記錄情況
 FROM
     "USER" u
-    JOIN "CREDIT_PURCHASE" cp ON u.id = cp.user_id
+    LEFT JOIN "CREDIT_PURCHASE" cp ON u.id = cp.user_id -- 使用 LEFT JOIN
 WHERE
     u.email = 'wXlTq@hexschooltest.io'
 GROUP BY
     u.id,
     u.email;
+LIMIT 1;
 
 -- 5-7. 查詢：計算用戶王小明的已使用堂數，顯示須包含以下欄位： user_id , total。 (需使用到 Count 函式與 Group By)
+SELECT 
+    u.id AS "user_id",
+    COALESCE(COUNT(cb.join_at), 0) AS "total_classes_joined"
+FROM 
+    "USER" AS u
+LEFT JOIN 
+    "COURSE_BOOKING" AS cb
+    ON cb.user_id = u.id AND cb.join_at IS NOT NULL
+WHERE 
+    u.email = 'wXlTq@hexschooltest.io'
+GROUP BY 
+    u.id
+LIMIT 1;
+
 -- 5-8. [挑戰題] 查詢：請在一次查詢中，計算用戶王小明的剩餘可用堂數，顯示須包含以下欄位： user_id , remaining_credit
 -- 提示：
 -- select ("CREDIT_PURCHASE".total_credit - "COURSE_BOOKING".used_credit) as remaining_credit, ...
 -- from ( 用戶王小明的購買堂數 ) as "CREDIT_PURCHASE"
 -- inner join ( 用戶王小明的已使用堂數) as "COURSE_BOOKING"
 -- on "COURSE_BOOKING".user_id = "CREDIT_PURCHASE".user_id;
+-- 從兩個子查詢（a 和 b）中提取數據，並計算剩餘可用堂數。
+-- 子查詢 a（計算購買總堂數）：
+-- 子查詢 b（計算已使用堂數）：
+
+SELECT 
+	a.用戶編號
+	,a.用戶姓名
+    ,a.購買總堂數
+	,b.已使用堂數
+	,(a.購買總堂數 - b.已使用堂數) AS "剩餘可用堂數" 
+FROM
+(
+SELECT 
+   u.id AS "用戶編號"
+   ,u.email AS "用戶信箱"
+   ,u.name AS "用戶姓名"
+   ,sum(cpur.purchased_credits) AS "購買總堂數"
+FROM "CREDIT_PURCHASE" AS "cpur"
+ 	INNER JOIN "USER" AS "u" 
+ 	ON cpur.user_id = u.id
+	GROUP BY u.id
+) AS "a"
+INNER JOIN 
+(
+	SELECT 
+		u.id AS "用戶編號"
+		,u.email AS "用戶信箱"
+		,u.name AS "預約人名稱"
+		,COUNT(join_at) AS "已使用堂數"
+	FROM "COURSE_BOOKING" AS "cb"
+		INNER JOIN "USER" AS "u"
+		ON cb.user_id = u.id
+	WHERE join_at is NOT NULL
+	GROUP BY u.id
+) AS "b"
+ON a.用戶編號 = b.用戶編號
+
+
 -- ████████  █████   █     ███  
 --   █ █   ██    █  █     █     
 --   █ █████ ███ ███      ████  
@@ -520,11 +492,78 @@ GROUP BY
 -- 6. 後台報表
 -- 6-1 查詢：查詢專長為重訓的教練，並按經驗年數排序，由資深到資淺（需使用 inner join 與 order by 語法)
 -- 顯示須包含以下欄位： 教練名稱 , 經驗年數, 專長名稱
+-- 使用了多個 INNER JOIN，將多個表聯結起來以獲取所需的欄位。這種方式適合數據之間關聯性強的情況，例如教練與技能的對應關係。
+SELECT 
+    DISTINCT u.name AS "教練名稱",
+    u.role AS "用戶角色",
+    s.name AS "專長名稱",
+    c.experience_years AS "經驗年數"
+FROM "COACH_LINK_SKILL" AS "clk"
+    INNER JOIN "COACH" AS "c" 
+    ON clk.coach_id = c.id
+    INNER JOIN "USER" AS "u" 
+    ON c.user_id = u.id
+    INNER JOIN "SKILL" AS "s" 
+    ON clk.skill_id = s.id
+WHERE s.name = '重訓'
+ORDER BY 經驗年數 DESC;
+
 -- 6-2 查詢：查詢每種專長的教練數量，並只列出教練數量最多的專長（需使用 group by, inner join 與 order by 與 limit 語法）
 -- 顯示須包含以下欄位： 專長名稱, coach_total
+-- INNER JOIN 子句：將 COACH_LINK_SKILL 表與 COACH 表通過 coach_id 進行關聯，獲取教練的詳細信息。
+-- INNER JOIN 子句：將 COACH_LINK_SKILL 表與 SKILL 表通過 skill_id 進行關聯，獲取技能的名稱。
+-- GROUP BY 子句：根據教練總數（coach_total）降序排列，確保教練數量最多的技能排在最前面。
+-- LIMIT 子句：限制返回的記錄數量為 1，僅返回教練數量最多的技能。
+SELECT 
+    s.name AS "專長名稱",
+    COUNT(DISTINCT c.user_id) AS "coach_total"
+FROM "COACH_LINK_SKILL" AS "clk"
+INNER JOIN "COACH" AS "c" 
+ON clk.coach_id = c.id
+INNER JOIN "SKILL" AS "s" 
+ON clk.skill_id = s.id
+GROUP BY s.name
+ORDER BY coach_total DESC
+LIMIT 1;
+
 -- 6-3. 查詢：計算 11 月份組合包方案的銷售數量
 -- 顯示須包含以下欄位： 組合包方案名稱, 銷售數量
+-- purchased_credits 是購買記錄表中的欄位，這裡的計算是基於記錄數量，而非直接計算購買的點數總和。如果需要計算總點數，可以改為 SUM(cpur.purchased_credits)。
+-- 將 CREDIT_PURCHASE 表與 CREDIT_PACKAGE 表通過 credit_package_id 進行關聯，獲取組合包的詳細信息（如名稱）。
+SELECT 
+      cp.name AS "組合包方案名稱"
+      ,COUNT(cpur.purchased_credits) AS "銷售數量"
+FROM "CREDIT_PURCHASE" AS "cpur"
+	INNER JOIN "CREDIT_PACKAGE" AS "cp" 
+	ON cpur.credit_package_id = cp.id
+WHERE DATE_PART('month', cpur.purchase_at) = 12  -- 現在是12月
+GROUP BY cp.name;
+
 -- 6-4. 查詢：計算 11 月份總營收（使用 purchase_at 欄位統計）
 -- 顯示須包含以下欄位： 總營收
+-- DATE_PART('month', purchase_at) AS "購買月份"：從購買日期（purchase_at）中提取月份，並將其命名為「購買月份」。
+-- SUM(price_paid) AS "總營收"：計算該月份內所有購買記錄的支付金額總和，並命名為「總營收」。
+SELECT 
+DATE_PART('month', purchase_at) AS "購買月份"
+      ,SUM(price_paid) AS "總營收"
+FROM "CREDIT_PURCHASE"
+WHERE DATE_PART('month', purchase_at) = 12 
+GROUP BY DATE_PART('month', purchase_at);
+
 -- 6-5. 查詢：計算 11 月份有預約課程的會員人數（需使用 Distinct，並用 created_at 和 status 欄位統計）
 -- 顯示須包含以下欄位： 預約會員人數
+-- COUNT(DISTINCT u.id) 的使用：使用 DISTINCT 確保每位會員只計算一次，即使該會員在 11 月多次預約課程，也只會計算為 1 人。
+-- cb.cancelled_at IS NULL：確保只統計未取消的預約記錄。
+
+SELECT 
+    DATE_PART('month', cb.booking_at) AS "預約課程月份",
+    COUNT(DISTINCT u.id) AS "預約會員人數"
+FROM "COURSE_BOOKING" AS "cb"
+INNER JOIN "COURSE" AS "c"
+ON c.id = cb.course_id
+INNER JOIN "USER" AS "u"
+ON cb.user_id = u.id
+WHERE cb.cancelled_at IS NULL 
+  AND DATE_PART('year', cb.booking_at) = 2024
+GROUP BY DATE_PART('month', cb.booking_at)
+ORDER BY "預約課程月份";
