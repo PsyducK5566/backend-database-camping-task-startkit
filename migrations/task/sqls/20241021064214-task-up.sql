@@ -34,7 +34,7 @@ VALUES
 --使用 LOWER() 函數將 email 欄位轉為小寫後再比較，避免大小寫問題。
 UPDATE "USER"
 SET role = 'COACH'
-WHERE LOWER(email) IN
+WHERE (email) IN
     ('lee2000@hexschooltest.io', 'muscle@hexschooltest.io', 'starplatinum@hexschooltest.io');
 
 -- 檢查
@@ -127,6 +127,19 @@ CROSS JOIN "CREDIT_PACKAGE" AS "cp"
 WHERE u.email = 'richman@hexschooltest.io'
 AND cp.name IN ('14 堂組合包方案');
 
+---以 select 方式查詢資料
+-- select 
+--        u.name as "name"
+--       ,cp.name as "課程組合包名稱"
+--       ,cpur.purchased_credits as "購買堂數"
+--       ,cpur.price_paid as "已付課程價錢"
+-- FROM "CREDIT_PURCHASE" as "cpur"
+--  	INNER JOIN "USER" as "u" 
+-- 	 	on cpur.user_id = u.id
+-- 	INNER JOIN "CREDIT_PACKAGE" as "cp" 
+-- 		on cpur.credit_package_id = cp.id
+-- order by name;
+
 
 -- ████████  █████   █    ████   
 --   █ █   ██    █  █         ██ 
@@ -154,7 +167,14 @@ AND cp.name IN ('14 堂組合包方案');
 INSERT INTO "COACH" (user_id,experience_years)
 SELECT id,2
 FROM "USER"
-WHERE email IN ('lee2000@hexschooltest.io','muscle@hexschooltest.io','starplatINum@hexschooltest.io');
+WHERE email IN ('lee2000@hexschooltest.io','muscle@hexschooltest.io','starplatinum@hexschooltest.io');
+
+--查詢資料
+-- select 
+-- 	u.name as "教練名稱"
+-- 	,c.experience_years as "年資"
+-- FROM "COACH" AS "c"
+-- 	INNER JOIN "USER" as "u" on c.user_id = u.id;
 
 -- 3-2. 新增：承1，為三名教練新增專長資料至 `COACH_LINK_SKILL` ，資料需求如下：
 -- 1. 所有教練都有 `重訓` 專長
@@ -190,7 +210,7 @@ FROM "COACH" AS "c"
 CROSS JOIN "SKILL" AS "s"
 INNER JOIN "USER" AS "u" on c.user_id = u.id
 WHERE s.name IN ('有氧運動','復健訓練')
-AND u.email = 'starplatINum@hexschooltest.io';
+AND u.email = 'starplatinum@hexschooltest.io';
 
 
 -- 3-3 修改：更新教練的經驗年數，資料需求如下：
@@ -217,7 +237,7 @@ UPDATE "COACH"
 SET experience_years = 5
 FROM "USER" AS "u" 
 WHERE user_id = u.id
-AND u.email = 'starplatINum@hexschooltest.io';
+AND u.email = 'starplatinum@hexschooltest.io';
 
 -- 3-4 刪除：新增一個專長 空中瑜伽 至 SKILL 資料表，之後刪除此專長。
 --新增
@@ -253,7 +273,7 @@ WHERE
 -- COACH_LINK_SKILL 表中的 skill_id 必須與 SKILL 表中的 id 對應，且技能名稱為「重訓」。
 -- WHERE 條件的作用：
 -- 限制條件為 USER 表中 email 為 'lee2000@hexschooltest.io' 的教練，確保新增的課程屬於該教練。
-INSERT INTO "COURSE" (user_id,skill_id,name,start_at,end_at,max_participants,meetINg_url)
+INSERT INTO "COURSE" (user_id,skill_id,name,start_at,end_at,max_participants,meeting_url)
 SELECT 
 	u.id
 	,s.id
@@ -261,7 +281,7 @@ SELECT
 	,'2024-11-25 14:00:00' AS "start_at"
 	,'2024-11-25 16:00:00' AS "end_at"
 	,'10' AS "max_participants"
-	,'https://test-meetINg.test.io' AS "meetINg_url"
+	,'https://test-meeting.test.io' AS "meeting_url"
 FROM "USER" AS "u"
 INNER JOIN "COACH" AS "c"
 ON u.id = c.user_id
@@ -407,26 +427,21 @@ WHERE u.id = "COURSE_BOOKING".user_id
 			  );
 
 -- 5-6. 查詢：計算用戶王小明的購買堂數，顯示須包含以下欄位： user_id , total。 (需使用到 SUM 函式與 Group By)
---LEFT JOIN，即使該用戶沒有購買記錄，仍然會返回該用戶的基本信息，且購買總額顯示為 0。
--- 使用 COALESCE 函數將 SUM 的結果（可能為 NULL）轉換為 0，避免結果中出現空值。
 
 SELECT
-    u.id AS user_id,
+    u.id AS "user_id",
+    u.name AS "用戶姓名",
     u.email,
-    COALESCE(SUM(cp.purchased_credits), 0) AS total -- 處理無記錄情況
-FROM
-    "USER" u
-    LEFT JOIN "CREDIT_PURCHASE" cp ON u.id = cp.user_id -- 使用 LEFT JOIN
-WHERE
-    u.email = 'wXlTq@hexschooltest.io'
-GROUP BY
-    u.id,
-    u.email;
-LIMIT 1;
+    COALESCE(SUM(cpur.purchased_credits), 0) AS "total" -- 處理無記錄情況
+FROM "CREDIT_PURCHASE" AS "cpur"
+ 	INNER JOIN "USER" AS "u" 
+	ON cpur.user_id = u.id AND u.email = 'wXlTq@hexschooltest.io'
+GROUP BY u.id,u.name;
 
 -- 5-7. 查詢：計算用戶王小明的已使用堂數，顯示須包含以下欄位： user_id , total。 (需使用到 Count 函式與 Group By)
 SELECT 
     u.id AS "user_id",
+     u.name AS "用戶姓名",
     COALESCE(COUNT(cb.join_at), 0) AS "total_classes_joined"
 FROM 
     "USER" AS u
@@ -480,7 +495,7 @@ INNER JOIN
 	WHERE join_at is NOT NULL
 	GROUP BY u.id
 ) AS "b"
-ON a.用戶編號 = b.用戶編號;
+ON a.用戶編號 = b.用戶編號 and a.用戶信箱 = 'wXlTq@hexschooltest.io';
 
 
 -- ████████  █████   █     ███  
