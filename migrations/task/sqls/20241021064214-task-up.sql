@@ -480,7 +480,7 @@ INNER JOIN
 	WHERE join_at is NOT NULL
 	GROUP BY u.id
 ) AS "b"
-ON a.用戶編號 = b.用戶編號
+ON a.用戶編號 = b.用戶編號;
 
 
 -- ████████  █████   █     ███  
