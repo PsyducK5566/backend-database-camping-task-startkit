@@ -179,7 +179,7 @@ WHERE email IN ('lee2000@hexschooltest.io','muscle@hexschooltest.io','starplatin
 -- 3-2. 新增：承1，為三名教練新增專長資料至 `COACH_LINK_SKILL` ，資料需求如下：
 -- 1. 所有教練都有 `重訓` 專長
 -- CROSS JOIN：將 COACH 表和 SKILL 表進行交叉連接，生成所有可能的教練與技能組合。
--- CROSS JOIN：將 COACH 表與 USER 表連接，通過 c.user_id = u.id 獲取教練對應的用戶信息。
+-- INNER JOIN：將 COACH 表與 USER 表連接，通過 c.user_id = u.id 獲取教練對應的用戶信息。
 -- 限制篩選條件，僅選取技能名稱為 「重訓」 的技能記錄。
 INSERT INTO "COACH_LINK_SKILL" (coach_id,skill_id)
 SELECT 
@@ -442,7 +442,7 @@ GROUP BY u.id,u.name;
 SELECT 
     u.id AS "user_id",
      u.name AS "用戶姓名",
-    COALESCE(COUNT(cb.join_at), 0) AS "total_classes_joined"
+    COALESCE(COUNT(cb.join_at), 0) AS "total"
 FROM 
     "USER" AS u
 LEFT JOIN 
@@ -465,15 +465,15 @@ LIMIT 1;
 -- 子查詢 b（計算已使用堂數）：
 
 SELECT 
-	a.用戶編號
+	a.user_id
 	,a.用戶姓名
     ,a.購買總堂數
 	,b.已使用堂數
-	,(a.購買總堂數 - b.已使用堂數) AS "剩餘可用堂數" 
+	,(a.購買總堂數 - b.已使用堂數) AS "remaining_credit"  --由提示而來
 FROM
 (
 SELECT 
-   u.id AS "用戶編號"
+   u.id AS "user_id"
    ,u.email AS "用戶信箱"
    ,u.name AS "用戶姓名"
    ,sum(cpur.purchased_credits) AS "購買總堂數"
@@ -485,7 +485,7 @@ FROM "CREDIT_PURCHASE" AS "cpur"
 INNER JOIN 
 (
 	SELECT 
-		u.id AS "用戶編號"
+		u.id AS "user_id"
 		,u.email AS "用戶信箱"
 		,u.name AS "預約人名稱"
 		,COUNT(join_at) AS "已使用堂數"
@@ -495,7 +495,7 @@ INNER JOIN
 	WHERE join_at is NOT NULL
 	GROUP BY u.id
 ) AS "b"
-ON a.用戶編號 = b.用戶編號 and a.用戶信箱 = 'wXlTq@hexschooltest.io';
+ON a.user_id = b.user_id and a.用戶信箱 = 'wXlTq@hexschooltest.io';
 
 
 -- ████████  █████   █     ███  
